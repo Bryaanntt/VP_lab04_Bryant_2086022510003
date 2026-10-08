@@ -1,65 +1,27 @@
 Lab 04 - Fix Log
 
-1. MenuScreen, struktur halaman
-Sebelum: Column berisi header, search, chip, promo, lalu Expanded(ListView). Saat keyboard terbuka atau landscape, bagian atas sudah memakan tinggi layar, lalu overflow bawah 148 px.
-Aturan yang dilanggar: Column minta tinggi sebesar isinya, padahal parent hanya punya sisa ruang terbatas dan tidak ada yang bisa di-scroll.
-Sesudah: seluruh halaman jadi satu CustomScrollView dengan slivers, jadi kelebihan tinggi bisa digulir.
+1. MenuScreen (struktur halaman) mengalami overflow bawah 148 px saat keyboard terbuka atau layar landscape. Aturan yang dilanggar adalah Column meminta tinggi sebesar isinya, padahal parent hanya punya sisa ruang yang terbatas dan tidak ada yang bisa discroll. Perbaikannya, Column diganti menjadi CustomScrollView dengan slivers sehingga kelebihan tinggi bisa digulir.
 
-2. MenuScreen, breakpoint tablet
-Sebelum: isTablet = MediaQuery.sizeOf(context).width > 600.
-Aturan yang dilanggar: membaca ukuran layar, bukan constraint yang diberikan parent. Batasnya juga salah, karena 600 pas tidak dihitung tablet.
-Sesudah: LayoutBuilder dengan constraints.maxWidth >= 600. Lebar: grid. Sempit: list.
+2. MenuScreen (breakpoint tablet) membuat tampilan tablet hanya melebar tanpa mengubah layout. Penyebabnya, kode memakai MediaQuery yang membaca ukuran layar, bukan constraint yang diberikan parent, dan syaratnya > 600 padahal seharusnya >= 600. Perbaikannya memakai LayoutBuilder dengan constraints.maxWidth >= 600: lebar menjadi grid, di bawahnya menjadi list.
 
-3. MenuScreen, list dan grid
-Sebelum: ListView(children: [for ...]) dan GridView.count(crossAxisCount: 4, children: [for ...]). Semua item dibuat sekaligus, 4 kolom tetap.
-Aturan yang dilanggar: list yang panjangnya tidak dikontrol tidak lazy.
-Sesudah: SliverList.builder dan SliverGrid.builder. Kolom 3 atau 4 mengikuti lebar (maxWidth >= 900 jadi 4).
+3. MenuScreen (list dan grid) membuat semua item dibangun sekaligus dengan jumlah kolom tetap 4. Aturan yang dilanggar adalah list yang panjangnya tidak dikontrol harus dibangun secara lazy. Perbaikannya memakai SliverList.builder dan SliverGrid.builder, dengan jumlah kolom 3 atau 4 mengikuti lebar layar.
 
-4. MenuScreen, promo
-Sebelum: PromoStrip(first: promos[0], second: promos[1]).
-Aturan yang dilanggar: kode mengira selalu ada dua promo. Kalau data kosong, RangeError dan crash.
-Sesudah: PromoStrip(items: promos).
+4. MenuScreen (promo) bisa menyebabkan RangeError dan crash saat data kosong. Penyebabnya, kode mengira selalu ada dua promo lewat promos[0] dan promos[1]. Perbaikannya mengganti pemanggilan menjadi PromoStrip(items: promos).
 
-5. PromoStrip
-Sebelum: Row berisi dua PromoCard lebar 200 plus jarak 16, total sekitar 416 dp. Di layar 320 dp overflow kanan.
-Aturan yang dilanggar: anak minta lebar lebih besar dari yang diberikan parent.
-Sesudah: menerima List, kosong jadi SizedBox.shrink(), Row dibungkus SingleChildScrollView horizontal.
+5. PromoStrip mengalami overflow kanan di layar 320 dp dan bisa crash saat data kosong. Dua kartu lebar 200 dp ditambah jarak totalnya sekitar 416 dp, lebih besar dari lebar yang diberikan parent. Perbaikannya, widget menerima List, kalau kosong menampilkan SizedBox.shrink(), dan Row dibungkus scroll horizontal.
 
-6. PromoCard
-Sebelum: tiga Text tanpa maxLines.
-Sesudah: maxLines 1 atau 2 dan overflow ellipsis. Ukuran 200 x 150 bawaan file, tidak diubah.
+6. PromoCard memiliki teks yang bisa terpotong karena Text tidak punya maxLines dan strategi overflow. Perbaikannya menambahkan maxLines 1 atau 2 beserta ellipsis, sedangkan ukuran 200 x 150 bawaan file tidak diubah.
 
-7. StoreHeader
-Sebelum: Row berisi ikon, Column nama toko, bintang, dan teks ulasan, tanpa Expanded dan tanpa maxLines. Overflow kanan di 320 dp.
-Aturan yang dilanggar: Row memberi Text lebar tak terbatas dan tidak ada yang menyuruhnya mengalah.
-Sesudah: Column dibungkus Expanded, rating dipindah ke dalam Column, semua Text diberi maxLines dan ellipsis.
+7. StoreHeader mengalami overflow kanan di 320 dp. Aturan yang dilanggar adalah Row memberi Text lebar tak terbatas dan tidak ada yang menyuruhnya mengalah. Perbaikannya, Column dibungkus Expanded, rating dipindah ke dalam Column, dan semua Text diberi maxLines serta ellipsis.
 
-8. CategoryBar
-Sebelum: Row berisi 6 ChoiceChip langsung di Padding. Total lebar melebihi 320 dp, overflow kanan.
-Aturan yang dilanggar: isi minta lebih lebar dari parent dan tidak bisa digulir.
-Sesudah: dibungkus SingleChildScrollView horizontal.
+8. CategoryBar mengalami overflow kanan karena enam chip totalnya lebih lebar dari 320 dp dan tidak bisa digulir. Perbaikannya membungkus Row dengan SingleChildScrollView horizontal.
 
-9. MenuTile
-Sebelum: Column teks langsung di Row dengan Spacer, tanpa maxLines. Nama panjang membuat overflow kanan.
-Aturan yang dilanggar: Row memberi Text lebar tak terbatas.
-Sesudah: Column dibungkus Expanded, nama maxLines 2 dan ellipsis, harga maxLines 1.
+9. MenuTile mengalami overflow kanan, terutama saat nama menu sangat panjang. Penyebabnya, Row memberi Text lebar tak terbatas. Perbaikannya, Column teks dibungkus Expanded, nama diberi maxLines 2 dengan ellipsis, dan harga diberi maxLines 1.
 
-10. MenuCard
-Sebelum: Container(height: 110) dan Text tanpa maxLines. Di tablet overflow bawah 62 px.
-Aturan yang dilanggar: tinggi tetap tidak mau mengalah, padahal tinggi sel sudah ditentukan grid.
-Sesudah: Container diganti Expanded, semua Text diberi maxLines dan ellipsis.
+10. MenuCard mengalami overflow bawah 62 px di tablet. Aturan yang dilanggar adalah tinggi ikon yang dikeraskan 110 tidak mau mengalah, padahal tinggi sel sudah ditentukan oleh grid. Perbaikannya, Container diganti Expanded dan semua Text diberi maxLines serta ellipsis.
 
-11. CartBar
-Sebelum: Container(height: 72), tombol SizedBox(width: 160), Text tanpa Expanded dan tanpa SafeArea. Overflow kanan dan tombol bisa ketutup gesture bar.
-Aturan yang dilanggar: tinggi dan lebar dikeraskan, teks tidak dibatasi parent.
-Sesudah: height dan width dihapus, Text dibungkus Expanded dengan maxLines 2, seluruhnya dibungkus SafeArea(top: false).
+11. CartBar mengalami overflow kanan dan tombolnya bisa tertutup gesture bar. Penyebabnya, tinggi 72 dan lebar tombol 160 dikeraskan, teks tidak dibatasi parent, dan tidak ada inset aman. Perbaikannya, height dan width tetap dihapus, teks dibungkus Expanded dengan maxLines 2, dan seluruh bar dibungkus SafeArea(top: false).
 
-12. EmptyState (widget baru)
-Sebelum: data kosong menghasilkan layar blank.
-Aturan yang dilanggar: kode mengira data selalu ada.
-Sesudah: widget baru berisi ikon, pesan, dan tombol Reset filter, dengan key const Key('empty-state'). Dipasang di 
+12. EmptyState dibuat karena data kosong sebelumnya menghasilkan layar blank. Penyebabnya, kode mengira data selalu ada. Perbaikannya, dibuat widget baru berisi ikon, pesan, dan tombol Reset filter dengan key empty-state, yang dipasang di SliverFillRemaining.
 
-13. SliverFillRemaining.
-Pendukung di _MenuScreenState
-Sebelum: SearchBar tanpa controller, jadi tombol Reset tidak bisa mengosongkan kolom pencarian.
-Sesudah: ditambah TextEditingController _search, dispose(), dan _reset().
+13. _MenuScreenState mendapat tambahan pendukung karena tombol Reset filter tidak bisa mengosongkan kolom pencarian. Penyebabnya, SearchBar tidak punya controller. Perbaikannya menambahkan TextEditingController _search, method dispose(), dan method _reset().
